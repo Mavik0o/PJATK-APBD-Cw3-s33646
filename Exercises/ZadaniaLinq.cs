@@ -405,7 +405,26 @@ public sealed class ZadaniaLinq
     /// </summary>
     public IEnumerable<string> Wyzwanie03_ProwadzacyISredniaOcenNaIchPrzedmiotach()
     {
-        throw Niezaimplementowano(nameof(Wyzwanie03_ProwadzacyISredniaOcenNaIchPrzedmiotach));
+        return DaneUczelni.Prowadzacy
+            .Select(prowadzacy =>
+            {
+                var oceny = DaneUczelni.Przedmioty
+                    .Where(p => p.ProwadzacyId == prowadzacy.Id)
+                    .Join(
+                        DaneUczelni.Zapisy.Where(z => z.OcenaKoncowa.HasValue),
+                        przedmiot => przedmiot.Id,
+                        zapis => zapis.PrzedmiotId,
+                        (przedmiot, zapis) => zapis.OcenaKoncowa!.Value
+                    )
+                    .ToList();
+
+                var srednia = oceny.Count > 0
+                    ? oceny.Average().ToString("0.00")
+                    : "brak ocen";
+
+                return $"{prowadzacy.Imie} {prowadzacy.Nazwisko} | średnia ocen: {srednia}";
+            })
+            .OrderBy(w => w);
     }
 
     /// <summary>
